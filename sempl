@@ -7,6 +7,7 @@ __sempl_verbose=0
 __sempl_stdout=0
 __sempl_fail_missing=0
 __sempl_check=0
+__sempl_md=md5
 __sempl_template=''
 __sempl_outfile=''
 __sempl_varsfiles=( )
@@ -20,6 +21,7 @@ _usage() {
   echo "-s [varsfile]   vars file (can be repeated)"
   echo "-p [password]   decryption password"
   echo "-k [passfile]   decryption password file"
+  echo "-m [md5|sha256] message digest format (default: md5)"
   echo "-v              verbose"
   echo "-o              print template to stdout"
   echo "-f              fail if a variable is unset with no default"
@@ -114,6 +116,7 @@ _main() {
       -s)        shift; __sempl_varsfiles[${#__sempl_varsfiles[@]}]=${1};;
       -p)        shift; __sempl_password=${1};;
       -k)        shift; __sempl_password_file=${1};;
+      -m)        shift; __sempl_md=${1};;
       -v)        __sempl_verbose=1;;
       -o)        __sempl_stdout=1;;
       -f)        __sempl_fail_missing=1;;
@@ -144,7 +147,7 @@ _main() {
   for varsfile in "${__sempl_varsfiles[@]}"; do
     if head -1 ${varsfile} | grep -q -e '^Salted_'; then
       if [ ! -z "${__sempl_password}" ]; then
-        openssl aes-256-cbc -d -salt -in ${varsfile} -out ${varsfile}.unenc -k ${__sempl_password} \
+        openssl aes-256-cbc -d -salt -md ${__sempl_md} -in ${varsfile} -out ${varsfile}.unenc -k ${__sempl_password} \
           || { rm -f ${varsfile}.unenc; _error "Unable to decrypt password vars file ${varsfile}"; }
         source ${varsfile}.unenc \
           && rm -f ${varsfile}.unenc \

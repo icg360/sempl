@@ -2,6 +2,7 @@
 
 __crypttool_editor=${EDITOR:-vim}
 __crypttool_verbose=0
+__crypttool_md=md5
 __crypttool_command=''
 __crypttool_varsfile=''
 __crypttool_password=''
@@ -22,6 +23,7 @@ _usage() {
   echo "args:"
   echo "  -p [password]   (en|de)cryption password"
   echo "  -k [passfile]   (en|de)cryption password file"
+  echo "  -m [md5|sha256] message digest format (default: md5)"
   echo "  -v              verbose"
   echo "  -h              help"
   echo
@@ -50,7 +52,7 @@ _decrypt() {
   local varsfile=${1:-$__crypttool_varsfile}
   _verbose "Decrypting file ${varsfile}"
   __crypttool_decrypted_file=$(mktemp -t crypttool.XXXXXX)
-  openssl aes-256-cbc -d -salt -in ${varsfile} -out ${__crypttool_decrypted_file} -k ${__crypttool_password}
+  openssl aes-256-cbc -d -salt -md ${__crypttool_md} -in ${varsfile} -out ${__crypttool_decrypted_file} -k ${__crypttool_password}
   [ $? -eq 0 ] || _error "Unable to decrypt password vars file ${varsfile}"
 }
 
@@ -58,7 +60,7 @@ _encrypt() {
   local varsfile=${1:-$__crypttool_varsfile}
   _verbose "Encrypting file ${varsfile}"
   __crypttool_encrypted_file=$(mktemp -t crypttool.XXXXXX)
-  echo "${__crypttool_password}" | openssl aes-256-cbc -salt -in ${varsfile} -out ${__crypttool_encrypted_file} -pass stdin
+  echo "${__crypttool_password}" | openssl aes-256-cbc -salt -md ${__crypttool_md} -in ${varsfile} -out ${__crypttool_encrypted_file} -pass stdin
   [ $? -eq 0 ] || _error "Unable to encrypt password vars file ${varsfile}"
 }
 
@@ -98,6 +100,7 @@ _main() {
     case "$1" in
       -p)        shift; __crypttool_password=${1};;
       -k)        shift; __crypttool_password_file=${1};;
+      -m)        shift; __crypttool_md=${1};;
       -v)        __crypttool_verbose=1;;
       -h|--help) _usage; exit;;
       *)         __crypttool_command=${1};
