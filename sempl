@@ -78,9 +78,15 @@ _convert_template() {
     set -o pipefail
   fi
   eval "echo \"$(cat ${__tmp_tmpl} \
-                   | sed 's/\"/\"\\\"/g' \
-                   | sed 's/</\\</g' \
-                   | sed 's/>/\\>/g')\"" \
+        | sed 's/\"/\"\\\"/g' \
+        | sed 's/</\\</g' \
+        | sed 's/>/\\>/g' \
+        | sed 's/;/\\;/g' \
+        | sed 's/&/\\&/g' \
+        | sed 's/-/\\-/g')\"" \
+    | sed 's/\\;/;/g' \
+    | sed 's/\\&/\&/g' \
+    | sed 's/\\-/-/g' \
     | sed 's/\\>/>/g' \
     | sed 's/\\</</g' \
     > $__sempl_outfile
