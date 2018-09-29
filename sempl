@@ -103,7 +103,7 @@ _update() {
   which curl &> /dev/null && cmd="curl --silent -o ${__sempl_path}"
   which wget &> /dev/null && cmd="wget -q -O ${__sempl_path}"
   [ -z "$cmd" ] && _error "unable to find curl or wget in PATH"
-  eval "$cmd https://raw.githubusercontent.com/nextrevision/sempl/master/sempl"
+  eval "$cmd https://raw.githubusercontent.com/icg360/sempl/master/sempl"
   local version=$(grep -E -m 1 '^__sempl_version=' $__sempl_path | cut -d'=' -f2)
   echo "Updated from ${__sempl_version} to ${version}"
 }
