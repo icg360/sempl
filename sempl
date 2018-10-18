@@ -83,7 +83,7 @@ _convert_template() {
         | sed 's/>/\\>/g' \
         | sed 's/;/\\;/g' \
         | sed 's/&/\\&/g' \
-        | sed 's/-/\\-/g')\"" \
+        | sed 's/(?<!:)-/\\-/g')\"" \
     | sed 's/\\;/;/g' \
     | sed 's/\\&/\&/g' \
     | sed 's/\\-/-/g' \
