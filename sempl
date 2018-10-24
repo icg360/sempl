@@ -155,11 +155,6 @@ _main() {
     __sempl_password=$(head -n1 ${__sempl_password_file})
   fi
 
-  # check template for CRLF
-  #if []; then
-  # _verbose "Vars file had CRLF line endings, converting to LF at '${__sempl_template}'.lf"
-  #fi
-
   # if a vars file was specified ensure read permissions and load
   for varsfile in "${__sempl_varsfiles[@]}"; do
     local varsfile_temp=$varsfile
@@ -176,7 +171,6 @@ _main() {
       local varsfile_new=$varsfile.lf
       _verbose "Vars file had CRLF line endings, converting to LF at '${varsfile_new}'"
       sed 's/^M$//' $varsfile_temp > $varsfile_new
-      # If we already have a temp file, we're going to want to remove that
       _cleanup $varsfile_temp $varsfile
       varsfile_temp=$varsfile_new
     fi
@@ -185,9 +179,6 @@ _main() {
       _error "Cannot source vars file '${varsfile_temp}'"
     fi
     _cleanup $varsfile_temp $varsfile
-    # if [ "$varsfile_temp" != "$varsfile" ]; then
-    #   _verbose "Removing temp file ${varsfile_temp}"
-    # fi
   done
 
   # default outfile to template file without .tpml extension
