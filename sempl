@@ -45,6 +45,12 @@ _error() {
   exit 1
 }
 
+_cleanup() {
+  if [ "${1}" != "${2}" ]; then
+    _verbose "Removing temp file ${1}"
+  fi
+}
+
 _convert_template() {
   local __in_block=0
   local __tmp_script=/dev/null
@@ -151,19 +157,28 @@ _main() {
 
   # if a vars file was specified ensure read permissions and load
   for varsfile in "${__sempl_varsfiles[@]}"; do
+    local varsfile_temp=$varsfile
     if head -1 ${varsfile} | grep -q -e '^Salted_'; then
       if [ ! -z "${__sempl_password}" ]; then
-        openssl aes-256-cbc -d -salt -md ${__sempl_md} -in ${varsfile} -out ${varsfile}.unenc -k ${__sempl_password} \
-          || { rm -f ${varsfile}.unenc; _error "Unable to decrypt password vars file ${varsfile}"; }
-        source ${varsfile}.unenc \
-          && rm -f ${varsfile}.unenc \
-          || { rm -f ${varsfile}.unenc; _error "Cannot source vars file '${varsfile}'"; }
+        varsfile_temp=$varsfile.unenc
+        openssl aes-256-cbc -d -salt -md ${__sempl_md} -in ${varsfile} -out ${varsfile_temp} -k ${__sempl_password} \
+          || { rm -f ${varsfile_temp}; _error "Unable to decrypt password vars file ${varsfile_temp}"; }
       else
         _error 'No decryption password specified'
       fi
-    else
-      source ${varsfile} || _error "Cannot source vars file '${varsfile}'"
     fi
+    if file $varsfile_temp | grep -q 'CRLF' ; then
+      local varsfile_new=$varsfile.lf
+      _verbose "Vars file had CRLF line endings, converting to LF at '${varsfile_new}'"
+      sed 's/^M$//' $varsfile_temp > $varsfile_new
+      _cleanup $varsfile_temp $varsfile
+      varsfile_temp=$varsfile_new
+    fi
+    if ! source ${varsfile_temp}; then
+      _cleanup $varsfile_temp $varsfile
+      _error "Cannot source vars file '${varsfile_temp}'"
+    fi
+    _cleanup $varsfile_temp $varsfile
   done
 
   # default outfile to template file without .tpml extension
